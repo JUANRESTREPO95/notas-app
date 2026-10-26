@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% block title %}Ajustes · {{ app_name }}{% endblock %}
+{% block body_class %}page-settings{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-bar">
+    <a class="icon-btn" href="/notes" aria-label="Volver a notas">{{ icon('arrow-left', 20) }}</a>
+    <h1>Ajustes</h1>
+    <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambiar tema">
+      <span class="theme-icon theme-system">{{ icon('monitor', 20) }}</span>
+      <span class="theme-icon theme-light">{{ icon('sun', 20) }}</span>
+      <span class="theme-icon theme-dark">{{ icon('moon', 20) }}</span>
+    </button>
+  </header>
+
+  <main class="page-main" id="main" tabindex="-1">
+    <section class="card form-card" aria-labelledby="account-heading">
+      <h2 id="account-heading">Cuenta</h2>
+      <p class="muted">Usuario actual: <strong class="current-username">{{ user.username }}</strong></p>
+      <p class="form-error" id="username-error" role="alert" hidden></p>
+      <p class="form-ok" id="username-ok" role="status" hidden></p>
+      <form id="username-form" class="settings-form">
+        <label class="field">Nuevo usuario
+          <input id="new-username" name="username" required minlength="3" maxlength="50"
+                 pattern="[A-Za-z0-9._-]+" autocomplete="username">
+        </label>
+        <label class="field">Contraseña actual
+          <input id="username-current-password" type="password" required autocomplete="current-password">
+        </label>
+        <button class="btn-primary" type="submit">{{ icon('check', 18) }} Cambiar usuario</button>
+      </form>
+    </section>
+
+    <section class="card form-card" aria-labelledby="password-heading">
+      <h2 id="password-heading">Contraseña</h2>
+      <p class="muted">Mínimo 8 caracteres. Las demás sesiones abiertas no se cierran.</p>
+      <p class="form-error" id="password-error" role="alert" hidden></p>
+      <p class="form-ok" id="password-ok" role="status" hidden></p>
+      <form id="password-form" class="settings-form">
+        <label class="field">Contraseña actual
+          <input id="current-password" type="password" required autocomplete="current-password">
+        </label>
+        <label class="field">Contraseña nueva
+          <input id="new-password" type="password" required minlength="8" autocomplete="new-password">
+        </label>
+        <label class="field">Repetir contraseña nueva
+          <input id="new-password-confirm" type="password" required minlength="8" autocomplete="new-password">
+        </label>
+        <button class="btn-primary" type="submit">{{ icon('check', 18) }} Cambiar contraseña</button>
+      </form>
+    </section>
+
+    <section class="card form-card" aria-labelledby="api-heading">
+      <h2 id="api-heading">API</h2>
+      <p class="muted">Tokens para agentes. Se muestran una sola vez; si eliminas uno, ese agente pierde el acceso.</p>
+      <p class="muted small">
+        Los tokens <strong>hermes</strong> y <strong>claude-code</strong> son los que usan ahora tus agentes.
+        Si los borras, dejan de funcionar hasta que pongas el nuevo en su <code>.env</code>.
+      </p>
+      <div id="token-list" class="token-list" aria-live="polite"></div>
+
+      <h3>Nuevo token</h3>
+      <p class="form-error" id="token-error" role="alert" hidden></p>
+      <form id="token-form" class="settings-form">
+        <label class="field">Nombre
+          <input id="token-name" required maxlength="100" autocomplete="off" placeholder="hermes, claude, ...">
+        </label>
+        <div class="field">
+          <span>Permisos sobre notas</span>
+          <div class="token-rule-add">
+            <select id="rule-folder" aria-label="Carpeta">
+              <option value="">Todas las carpetas</option>
+            </select>
+            <select id="rule-level" aria-label="Permiso">
+              <option value="read">Leer</option>
+              <option value="write">Escribir</option>
+            </select>
+            <button type="button" class="btn-ghost" id="add-rule">Añadir permiso</button>
+            <button type="button" class="btn-ghost" id="new-rule-folder">Nueva carpeta</button>
+          </div>
+          <ul id="rule-list" class="rule-list"></ul>
+          <p class="muted small">Sin permisos, el token solo puede gestionar recordatorios. Todos los tokens pueden gestionar recordatorios; estos permisos solo controlan notas y carpetas.</p>
+        </div>
+        <button class="btn-primary" type="submit">{{ icon('plus', 18) }} Crear token</button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<dialog id="token-dialog" class="dialog" aria-labelledby="token-dialog-title">
+  <div class="dialog-form">
+    <header>
+      <h2 id="token-dialog-title">Token creado</h2>
+      <button type="button" class="icon-btn" data-close-dialog aria-label="Cerrar">{{ icon('x', 18) }}</button>
+    </header>
+    <p>Cópialo ahora. No se volverá a mostrar.</p>
+    <textarea id="token-value" class="token-value" readonly rows="3" aria-label="Token generado"></textarea>
+    <div class="dialog-actions">
+      <button type="button" class="btn-ghost" id="copy-token">{{ icon('file', 16) }} Copiar</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn-primary" data-close-dialog>Cerrar</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="token-edit-dialog" class="dialog" aria-labelledby="token-edit-title">
+  <div class="dialog-form">
+    <header>
+      <h2 id="token-edit-title">Editar permisos</h2>
+      <button type="button" class="icon-btn" data-close-dialog aria-label="Cerrar">{{ icon('x', 18) }}</button>
+    </header>
+    <p class="muted">Token: <strong id="token-edit-name"></strong></p>
+    <p class="form-error" id="token-edit-error" role="alert" hidden></p>
+    <div class="field">
+      <span>Permisos sobre notas</span>
+      <div class="token-rule-add">
+        <select id="edit-rule-folder" aria-label="Carpeta">
+          <option value="">Todas las carpetas</option>
+        </select>
+        <select id="edit-rule-level" aria-label="Permiso">
+          <option value="read">Leer</option>
+          <option value="write">Escribir</option>
+        </select>
+        <button type="button" class="btn-ghost" id="edit-add-rule">Añadir permiso</button>
+        <button type="button" class="btn-ghost" id="edit-new-folder">Nueva carpeta</button>
+      </div>
+      <ul id="edit-rule-list" class="rule-list"></ul>
+    </div>
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" data-close-dialog>Cancelar</button>
+      <button type="button" class="btn-primary" id="save-token-rules">Guardar permisos</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  window.NOTAS = {
+    page: 'settings',
+    timezone: {{ timezone|tojson }}
+  };
+</script>
+{% endblock %}

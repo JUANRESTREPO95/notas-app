@@ -1,0 +1,30 @@
+# Entorno y secretos
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db
+*.log
+
+# Datos locales
+data/
+backups/
+*.db
+*.db-wal
+*.db-shm
+
+# Bootstrap personal y capturas con datos de prueba
+static/BOOTSTRAP.md
+static/bootstrap.tar.gz
+screenshots/
+
+# Notas de trabajo personales
+proceso.md
+decisiones.md
+pendientes.md
+integrations/hermes/juan-calendar-workflow.SKILL.md

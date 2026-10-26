@@ -1,0 +1,20 @@
+[Unit]
+Description=Notificar recordatorios de Notas por WhatsApp
+After=network-online.target hermes-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.hermes/scripts/notificar_recordatorios.py
+Restart=always
+RestartSec=10
+Environment=HOME=%h
+Environment=USER=%u
+Environment=HERMES_BIN=%h/.hermes/hermes-agent/.hermes/bin/hermes
+Environment=PATH=%h/.hermes/hermes-agent/.hermes/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=%h
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

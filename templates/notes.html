@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/format.html" import format_bar %}
+
+{% macro render_folder(node, selected, depth) %}
+<li class="folder-node" data-folder-node="{{ node.path }}" data-folder-name="{{ node.name }}">
+  <div class="folder-row{% if node.path == selected %} is-active{% endif %}" style="--depth: {{ depth }}">
+    {% if node.children %}
+    <button class="folder-toggle" type="button" aria-expanded="false"
+            aria-label="Expandir {{ node.name }}" title="Expandir {{ node.name }}">
+      {{ icon('chevron-right', 16) }}
+    </button>
+    {% else %}
+    <span class="folder-toggle-spacer" aria-hidden="true"></span>
+    {% endif %}
+    <a class="folder-link" href="/notes?folder={{ node.path|urlencode }}"{% if node.path == selected %} aria-current="page"{% endif %}>
+      {{ icon('folder', 18) }}<span>{{ node.name }}</span>
+    </a>
+    <button class="icon-btn small folder-menu" type="button"
+            data-folder-path="{{ node.path }}" data-folder-name="{{ node.name }}"
+            aria-label="Opciones de {{ node.name }}">{{ icon('more', 16) }}</button>
+  </div>
+  {% if node.children %}
+  <ul class="folder-children" hidden>
+    {% for child in node.children %}{{ render_folder(child, selected, depth + 1) }}{% endfor %}
+  </ul>
+  {% endif %}
+</li>
+{% endmacro %}
+
+{% block title %}{% if selected_note %}{{ selected_note.title }} · {% endif %}{{ app_name }}{% endblock %}
+{% block body_class %}{% if selected_note %}note-open{% endif %}{% endblock %}
+
+{% block content %}
+<div class="app">
+  <aside class="sidebar" aria-label="Carpetas y notas">
+    <header class="sidebar-header">
+      <a class="brand" href="/notes">{{ icon('file', 22) }}<span>{{ app_name }}</span></a>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambiar tema">
+          <span class="theme-icon theme-system">{{ icon('monitor', 20) }}</span>
+          <span class="theme-icon theme-light">{{ icon('sun', 20) }}</span>
+          <span class="theme-icon theme-dark">{{ icon('moon', 20) }}</span>
+        </button>
+        <button class="icon-btn" type="button" data-new-note aria-label="Nueva nota" title="Nueva nota">
+          {{ icon('plus', 20) }}
+        </button>
+      </div>
+    </header>
+
+    <form class="search" method="get" action="/notes" role="search">
+      {{ icon('search', 18) }}
+      <input id="search-input" name="q" value="{{ q }}" placeholder="Buscar notas"
+             aria-label="Buscar notas" autocomplete="off">
+      {% if q %}
+      <a class="search-clear" href="/notes?folder={{ folder|urlencode }}" aria-label="Limpiar búsqueda">{{ icon('x', 16) }}</a>
+      {% endif %}
+    </form>
+
+    <nav class="sidebar-shortcuts" aria-label="Accesos rápidos">
+      <a class="sidebar-quick" href="/reminders">
+        {{ icon('bell', 18) }}<span>Recordatorios</span>
+      </a>
+    </nav>
+
+    <nav class="folders" aria-label="Carpetas">
+      <div class="section-head">
+        <h2>Carpetas</h2>
+        <div class="folder-actions">
+          <button class="icon-btn small" id="collapse-folders" type="button"
+                  aria-label="Contraer todas las carpetas" title="Contraer todas">
+            {{ icon('chevrons-up', 16) }}
+          </button>
+          <button class="icon-btn small" id="new-folder-btn" type="button" aria-label="Nueva carpeta" title="Nueva carpeta">
+            {{ icon('plus', 16) }}
+          </button>
+        </div>
+      </div>
+      <ul class="folder-tree">
+        {% for node in tree %}
+          {{ render_folder(node, folder, 0) }}
+        {% else %}
+          <li class="muted small folder-empty">Todavía no hay carpetas.</li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <section class="notes-list" aria-labelledby="notes-heading">
+      <div class="section-head">
+        <h2 id="notes-heading">
+          {% if q %}Resultados{% elif folder %}{{ folder.split('/')[-1] }}{% else %}Sin carpeta{% endif %}
+        </h2>
+        <span class="count">{{ results|length if q else notes|length }}</span>
+      </div>
+
+      {% if q %}
+        {% if results %}
+        <ul class="note-items">
+          {% for item in results %}
+          <li>
+            <a class="note-item" href="/notes?folder={{ item.folder|urlencode }}&note={{ item.id }}">
+              <span class="note-title">{{ item.title }}</span>
+              <span class="note-path">{{ item.path }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-list">Nada encontrado para “{{ q }}”.</p>
+        {% endif %}
+      {% elif notes %}
+      <ul class="note-items">
+        {% for item in notes %}
+        <li>
+          <a class="note-item{% if selected_note_id == item.id %} is-active{% endif %}"
+             href="/notes?folder={{ folder|urlencode }}&note={{ item.id }}"
+             data-note-item="{{ item.id }}">
+            <span class="note-title">{{ item.title }}</span>
+            <span class="note-date">{{ item.updated|fecha }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty-list">
+        <p>No hay notas en esta carpeta.</p>
+        <button class="btn-ghost" type="button" data-new-note>{{ icon('plus', 16) }} Crear nota</button>
+      </div>
+      {% endif %}
+    </section>
+
+    <footer class="sidebar-footer">
+      <span class="user">{{ user.username }}</span>
+      <div class="footer-actions">
+        <a class="icon-btn" href="/settings" aria-label="Ajustes" title="Ajustes">{{ icon('settings', 18) }}</a>
+        <form method="post" action="/logout">
+          <button class="btn-ghost" type="submit">{{ icon('log-out', 16) }} Salir</button>
+        </form>
+      </div>
+    </footer>
+  </aside>
+
+  <main class="workspace" id="main" tabindex="-1">
+    {% if selected_note %}
+    <header class="editor-bar">
+      <a class="icon-btn" href="/notes?folder={{ folder|urlencode }}" aria-label="Volver a la lista">
+        {{ icon('arrow-left', 20) }}
+      </a>
+      <span class="save-status" id="save-status" role="status" aria-live="polite">Guardado</span>
+      <div class="editor-actions">
+        <button class="btn-ghost" id="preview-toggle" type="button" aria-label="Vista previa">{{ icon('file', 16) }}<span id="preview-label">Vista previa</span></button>
+        <button class="icon-btn" id="history-note-btn" type="button" aria-label="Historial de la nota" title="Historial">
+          {{ icon('clock', 18) }}
+        </button>
+        <button class="icon-btn danger" id="delete-note-btn" type="button" aria-label="Eliminar nota" title="Eliminar nota">
+          {{ icon('trash', 18) }}
+        </button>
+      </div>
+    </header>
+
+    <div class="editor">
+      <input id="note-title" class="note-title-input" value="{{ selected_note.title }}"
+             aria-label="Título de la nota" maxlength="200">
+      <p class="note-meta">{{ selected_note.rel_path }} · actualizada {{ selected_note.updated|fecha }}</p>
+      {{ format_bar('note-content', 'Formato de la nota') }}
+      <div class="editor-panes">
+        <textarea id="note-content" class="note-content" aria-label="Contenido de la nota"
+                  spellcheck="true">{{ selected_note.content }}</textarea>
+        <div id="note-preview" class="preview prose" hidden></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      {{ icon('file', 44) }}
+      <h1>Selecciona una nota</h1>
+      <p>o crea una nueva para empezar.</p>
+      <button class="btn-primary" type="button" data-new-note>{{ icon('plus', 18) }} Nueva nota</button>
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<dialog id="note-dialog" class="dialog" aria-labelledby="note-dialog-title">
+  <form id="note-form" class="dialog-form">
+    <header>
+      <h2 id="note-dialog-title">Nueva nota</h2>
+      <button type="button" class="icon-btn" data-close-dialog aria-label="Cerrar">{{ icon('x', 18) }}</button>
+    </header>
+    <p class="form-error" id="note-form-error" hidden></p>
+    <label class="field">Título
+      <input id="new-note-title" name="title" required maxlength="200" autocomplete="off">
+    </label>
+    <label class="field">Carpeta
+      <select id="new-note-folder" name="folder">
+        <option value="">Sin carpeta</option>
+        {% for option in folder_options %}
+        <option value="{{ option.path }}">{{ option.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <footer class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" data-close-dialog>Cancelar</button>
+      <button type="submit" class="btn-primary">Crear nota</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="folder-dialog" class="dialog" aria-labelledby="folder-dialog-title">
+  <form id="folder-form" class="dialog-form">
+    <header>
+      <h2 id="folder-dialog-title">Nueva carpeta</h2>
+      <button type="button" class="icon-btn" data-close-dialog aria-label="Cerrar">{{ icon('x', 18) }}</button>
+    </header>
+    <p class="form-error" id="folder-form-error" hidden></p>
+    <input type="hidden" id="folder-mode" value="create">
+    <input type="hidden" id="folder-original" value="">
+    <label class="field">Nombre
+      <input id="folder-name" required maxlength="80" autocomplete="off">
+    </label>
+    <label class="field">Dentro de
+      <select id="folder-parent">
+        <option value="">Raíz</option>
+        {% for option in folder_options %}
+        <option value="{{ option.path }}">{{ option.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <footer class="dialog-actions">
+      <button type="button" class="btn-danger" id="folder-delete" hidden>Eliminar</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" data-close-dialog>Cancelar</button>
+      <button type="submit" class="btn-primary">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="delete-note-dialog" class="dialog" aria-labelledby="delete-note-title">
+  <form id="delete-note-form" class="dialog-form">
+    <header><h2 id="delete-note-title">Eliminar nota</h2></header>
+    <p>Esta acción no se puede deshacer.</p>
+    <footer class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" data-close-dialog>Cancelar</button>
+      <button type="submit" class="btn-danger">Eliminar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="history-dialog" class="dialog dialog-wide" aria-labelledby="history-title">
+  <div class="dialog-form">
+    <header>
+      <h2 id="history-title">Historial</h2>
+      <button type="button" class="icon-btn" data-close-dialog aria-label="Cerrar">{{ icon('x', 18) }}</button>
+    </header>
+    <p class="muted">La nota actual siempre está en el editor. Aquí ves las versiones guardadas.</p>
+    <div id="history-body" class="history-body">
+      <p class="muted">Cargando…</p>
+    </div>
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" data-close-dialog>Cerrar</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  window.NOTAS = {
+    page: 'notes',
+    noteId: {{ (selected_note.id|tojson) if selected_note else 'null' }},
+    folder: {{ folder|tojson }},
+    focusSearch: {{ focus_search|tojson }},
+    timezone: {{ timezone|tojson }}
+  };
+</script>
+{% endblock %}

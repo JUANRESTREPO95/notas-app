@@ -1,0 +1,49 @@
+{% from "macros/icons.html" import icon %}
+<!doctype html>
+<html lang="es" data-theme="light" data-theme-pref="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('notas-theme') || 'system';
+        var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var root = document.documentElement;
+        root.dataset.theme = dark ? 'dark' : 'light';
+        root.dataset.themePref = pref;
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="theme-color" content="#0f766e">
+  <meta name="color-scheme" content="light dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  {% block content %}{% endblock %}
+  {% if active_page is defined %}
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <a href="/notes" class="{% if active_page == 'notes' %}is-active{% endif %}">
+      {{ icon('file', 22) }}<span>Notas</span>
+    </a>
+    <a href="/reminders" class="{% if active_page == 'reminders' %}is-active{% endif %}">
+      {{ icon('bell', 22) }}<span>Recordatorios</span>
+    </a>
+    <a href="/notes?focus=search">
+      {{ icon('search', 22) }}<span>Buscar</span>
+    </a>
+    <a href="/settings" class="{% if active_page == 'settings' %}is-active{% endif %}">
+      {{ icon('settings', 22) }}<span>Ajustes</span>
+    </a>
+  </nav>
+  {% endif %}
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "macros/icons.html" import icon %}
+{% from "macros/format.html" import format_bar %}
+{% block title %}Recordatorios · {{ app_name }}{% endblock %}
+{% block body_class %}page-reminders{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-bar">
+    <a class="icon-btn" href="/notes" aria-label="Volver a notas">{{ icon('arrow-left', 20) }}</a>
+    <h1>Recordatorios</h1>
+    <button class="icon-btn" id="theme-toggle" type="button" aria-label="Cambiar tema">
+      <span class="theme-icon theme-system">{{ icon('monitor', 20) }}</span>
+      <span class="theme-icon theme-light">{{ icon('sun', 20) }}</span>
+      <span class="theme-icon theme-dark">{{ icon('moon', 20) }}</span>
+    </button>
+  </header>
+
+  <main class="page-main" id="main" tabindex="-1">
+    <form id="reminder-form" class="card form-card">
+      <h2>Nuevo recordatorio</h2>
+      <p class="form-error" id="reminder-form-error" hidden></p>
+      <label class="field">Título
+        <input id="reminder-title" name="title" required maxlength="300" autocomplete="off">
+      </label>
+      <div class="field">
+        <label for="reminder-body">Detalle</label>
+        {{ format_bar('reminder-body', 'Formato del detalle') }}
+        <textarea id="reminder-body" name="body" rows="3" maxlength="2000"></textarea>
+      </div>
+      <label class="field">Fecha y hora
+        <input id="reminder-due" name="due" type="datetime-local" inputmode="numeric">
+      </label>
+      <button class="btn-primary" type="submit">{{ icon('plus', 18) }} Añadir recordatorio</button>
+    </form>
+
+    <section class="reminders" aria-labelledby="pending-heading">
+      <div class="section-head">
+        <h2 id="pending-heading">Pendientes</h2>
+        <span class="count">{{ pending|length }}</span>
+      </div>
+      <ul>
+        {% for item in pending %}
+        <li class="reminder-item" data-reminder-id="{{ item.id }}">
+          <input type="checkbox" class="reminder-check" aria-label="Completar {{ item.title }}">
+          <div class="reminder-text">
+            <span class="reminder-title">{{ item.title }}</span>
+            {% if item.body_html %}<div class="reminder-body">{{ item.body_html|safe }}</div>{% endif %}
+          </div>
+          <span class="reminder-due{% if item.overdue %} is-overdue{% endif %}">
+            {% if item.due_at %}{{ item.due_at|fecha_hora }}{% else %}Sin fecha{% endif %}
+          </span>
+          <button class="icon-btn small reminder-delete" type="button" aria-label="Eliminar {{ item.title }}">
+            {{ icon('trash', 16) }}
+          </button>
+        </li>
+        {% else %}
+        <li class="empty-list">No hay recordatorios pendientes.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="reminders reminders-done" aria-labelledby="done-heading">
+      <div class="section-head">
+        <h2 id="done-heading">Completados</h2>
+        <span class="count">{{ done|length }}</span>
+      </div>
+      <ul>
+        {% for item in done %}
+        <li class="reminder-item is-done" data-reminder-id="{{ item.id }}">
+          <input type="checkbox" class="reminder-check" checked aria-label="Reactivar {{ item.title }}">
+          <div class="reminder-text">
+            <span class="reminder-title">{{ item.title }}</span>
+            {% if item.body_html %}<div class="reminder-body">{{ item.body_html|safe }}</div>{% endif %}
+          </div>
+          <span class="reminder-due">
+            {% if item.due_at %}{{ item.due_at|fecha_hora }}{% endif %}
+          </span>
+          <button class="icon-btn small reminder-delete" type="button" aria-label="Eliminar {{ item.title }}">
+            {{ icon('trash', 16) }}
+          </button>
+        </li>
+        {% else %}
+        <li class="empty-list">Nada completado todavía.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </main>
+</div>
+
+<script>
+  window.NOTAS = {
+    page: 'reminders',
+    timezone: {{ timezone|tojson }}
+  };
+</script>
+{% endblock %}

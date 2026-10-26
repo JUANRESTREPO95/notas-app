@@ -1,0 +1,23 @@
+{% from "macros/icons.html" import icon %}
+{% macro format_bar(target, label='Formato de Markdown') -%}
+<div class="format-bar" role="toolbar" aria-label="{{ label }}" data-format-target="{{ target }}">
+  <button type="button" class="format-btn" data-format="h1" aria-label="H1 Título 1" title="Título 1">H1</button>
+  <button type="button" class="format-btn" data-format="h2" aria-label="H2 Título 2" title="Título 2">H2</button>
+  <span class="format-sep" aria-hidden="true"></span>
+  <button type="button" class="format-btn fmt-bold" data-format="bold" aria-label="B Negrita" title="Negrita">B</button>
+  <button type="button" class="format-btn fmt-italic" data-format="italic" aria-label="I Cursiva" title="Cursiva">I</button>
+  <button type="button" class="format-btn fmt-strike" data-format="strike" aria-label="S Tachado" title="Tachado">S</button>
+  <span class="format-sep" aria-hidden="true"></span>
+  <button type="button" class="format-btn" data-format="ul" aria-label="Lista con viñetas" title="Lista con viñetas">{{ icon('list', 18) }}</button>
+  <button type="button" class="format-btn" data-format="ol" aria-label="Lista numerada" title="Lista numerada">{{ icon('list-ordered', 18) }}</button>
+  <button type="button" class="format-btn" data-format="quote" aria-label="Cita" title="Cita">{{ icon('quote', 18) }}</button>
+  <span class="format-sep" aria-hidden="true"></span>
+  <button type="button" class="format-btn" data-format="code" aria-label="Código en línea" title="Código en línea">{{ icon('code', 18) }}</button>
+  <button type="button" class="format-btn" data-format="codeblock" aria-label="Bloque de código" title="Bloque de código">{{ icon('terminal', 18) }}</button>
+  <button type="button" class="format-btn" data-format="link" aria-label="Enlace" title="Enlace">{{ icon('link', 18) }}</button>
+  <span class="format-sep" aria-hidden="true"></span>
+  <button type="button" class="format-btn" data-format="table" aria-label="Tabla" title="Insertar tabla">{{ icon('table', 18) }}</button>
+  <button type="button" class="format-btn" data-format="checklist" aria-label="Lista de tareas" title="Lista de tareas">{{ icon('check-square', 18) }}</button>
+  <button type="button" class="format-btn" data-format="hr" aria-label="Separador" title="Separador">{{ icon('minus', 18) }}</button>
+</div>
+{%- endmacro %}

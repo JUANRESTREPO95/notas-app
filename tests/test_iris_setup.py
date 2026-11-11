@@ -33,9 +33,11 @@ def test_iris_memory_structure_created(auth, settings):
 
 def test_agent_note_points_to_iris_config(client, settings):
     content = (settings.notes_dir / "Agente.md").read_text(encoding="utf-8")
-    assert "<!-- iris:configuracion -->" in content
+    assert "<!-- iris:configuracion:v2 -->" in content
     assert "Iris/configuracion/configuracion.md" in content
     assert "Iris/configuracion/usuario.md" in content
+    assert "Pedir el token" in content
+    assert "iris-agent/main/install.sh" in content
 
 
 def test_iris_setup_is_idempotent(settings):
@@ -51,7 +53,25 @@ def test_iris_setup_is_idempotent(settings):
     assert second == []
 
     content = (settings.notes_dir / "Agente.md").read_text(encoding="utf-8")
-    assert content.count("<!-- iris:configuracion -->") == 1
+    assert content.count("<!-- iris:configuracion:v2 -->") == 1
+
+
+def test_iris_setup_updates_old_agent_section(settings):
+    prepare(settings)
+    agent_path = settings.notes_dir / "Agente.md"
+    agent_path.write_text(
+        "---\nid: agente\ntitle: Agente\nprotected: true\n---\n"
+        "Mi texto propio\n\n<!-- iris:configuracion -->\n\n## Sección vieja\n",
+        encoding="utf-8",
+    )
+
+    created = ensure_iris_setup(settings)
+    assert "Agente" in created
+    content = agent_path.read_text(encoding="utf-8")
+    assert "Mi texto propio" in content
+    assert "## Sección vieja" not in content
+    assert "<!-- iris:configuracion:v2 -->" in content
+    assert "<!-- iris:configuracion -->" not in content
 
 
 def test_iris_setup_does_not_overwrite_edits(settings):

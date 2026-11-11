@@ -25,7 +25,8 @@ IRIS_FOLDER = "Iris"
 IRIS_CONFIG_FOLDER = "Iris/configuracion"
 IRIS_CONFIG_SLUG = "configuracion"
 IRIS_USER_SLUG = "usuario"
-AGENT_MARKER = "<!-- iris:configuracion -->"
+AGENT_MARKER = "<!-- iris:configuracion:v2 -->"
+AGENT_MARKER_V1 = "<!-- iris:configuracion -->"
 
 CONFIG_CONTENT = """# Configuración de Iris
 
@@ -75,14 +76,25 @@ Datos de la persona que usa Iris. Se leen antes de atender cualquier mensaje.
 AGENT_SECTION = f"""
 {AGENT_MARKER}
 
-## Configuración de Iris
+## Agentes nuevos: qué hacer
 
-La configuración de Iris y los datos de la persona viven en `Iris/configuracion`:
+1. **Leer esta nota** completa. Es pública y se descarga desde `/agente`, sin
+   sesión.
+2. **Pedir el token** de la API al usuario (Ajustes → API) y no guardarlo aquí:
+   esta nota es pública.
+3. **Leer la configuración y al usuario** con ese token:
+   - `Iris/configuracion/configuracion.md` — cómo debe responder Iris: tono,
+     reglas y límites.
+   - `Iris/configuracion/usuario.md` — nombre, edad, qué hace, preferencias y
+     cualquier dato que deba recordar.
+4. **Instalar Iris** si el equipo no lo tiene:
 
-- `Configuración` (`Iris/configuracion/configuracion.md`): cómo debe responder
-  Iris, su tono, reglas y límites.
-- `Usuario` (`Iris/configuracion/usuario.md`): nombre, edad, qué hace,
-  preferencias y cualquier dato que deba recordar.
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/JUANRESTREPO95/iris-agent/main/install.sh | sudo bash
+   ```
+
+   El instalador pregunta el canal (Telegram o WhatsApp), el modelo y si quieres
+   Notas como memoria persistente.
 
 Cualquier agente que atienda por Iris debe leer esas dos notas antes de responder.
 """
@@ -147,8 +159,16 @@ def ensure_iris_setup(settings: Settings) -> list[str]:
     agent_path = find_agent_note_path(settings)
     if agent_path is not None:
         post = load_post(agent_path)
-        if AGENT_MARKER not in (post.content or ""):
-            post.content = f"{post.content.rstrip()}\n{AGENT_SECTION}"
+        content = post.content or ""
+        if AGENT_MARKER not in content:
+            block = AGENT_SECTION.strip("\n")
+            if AGENT_MARKER_V1 in content:
+                # Actualiza la sección de la versión anterior: se reemplaza
+                # desde su marca hasta el final (se añadía al final de la nota).
+                head = content[: content.index(AGENT_MARKER_V1)].rstrip()
+            else:
+                head = content.rstrip()
+            post.content = f"{head}\n\n{block}\n" if head else f"{block}\n"
             meta = dict(post.metadata or {})
             meta["updated"] = now_iso(settings.timezone)
             post.metadata = meta

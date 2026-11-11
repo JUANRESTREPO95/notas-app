@@ -23,6 +23,8 @@ def test_memory_note_created_in_root(auth, settings):
     assert "## Usuario" in content
     assert "## Proyectos" in content
     assert "proyectos/<nombre>" in content
+    assert "## Recordatorios" in content
+    assert "POST /api/reminders" in content
     assert "Nombre:" in content
 
 

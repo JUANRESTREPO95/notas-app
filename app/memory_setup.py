@@ -59,6 +59,20 @@ proyecto tal cual.
 - `/guardar` resume lo importante y actualiza `contexto.md`.
 - En modo automático, cada intercambio se guarda en `conversacion.md`; en modo
   manual solo se guarda con `/guardar`.
+
+## Recordatorios
+
+Para crear un recordatorio, interpreta la fecha con la hora actual del contexto
+y usa la API de Notas:
+
+```bash
+POST /api/reminders
+{{"title": "...", "body": "...", "due_at": "YYYY-MM-DDTHH:MM:SS-05:00", "timezone": "America/Bogota"}}
+```
+
+- `title` corto; `body` opcional.
+- `due_at` siempre con zona horaria.
+- Iris avisa por el canal configurado y pregunta si ya está listo.
 {PROJECT_MARKER_END}"""
 
 MEMORY_CONTENT = f"""# Configuración

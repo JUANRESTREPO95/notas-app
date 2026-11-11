@@ -240,6 +240,8 @@ configuracion.md
   `usuario.md`), su contenido se migra a la nota nueva una sola vez.
 - La nota `Agente` apunta a `configuracion.md` para que cualquier agente sepa
   dónde leer la configuración y los datos del usuario.
+- El bloque de **Recordatorios** explica a los agentes cómo crear recordatorios
+  con `POST /api/reminders`.
 
 ### Proyectos
 

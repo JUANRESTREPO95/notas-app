@@ -77,6 +77,14 @@
         </div>
       </div>
       <ul class="folder-tree">
+        <li class="folder-node" data-folder-node="" data-folder-name="Raíz">
+          <div class="folder-row{% if not folder %} is-active{% endif %}" style="--depth: 0">
+            <span class="folder-toggle-spacer" aria-hidden="true"></span>
+            <a class="folder-link" href="/notes?folder="{% if not folder %} aria-current="page"{% endif %}>
+              {{ icon('file', 18) }}<span>Raíz</span>
+            </a>
+          </div>
+        </li>
         {% for node in tree %}
           {{ render_folder(node, folder, 0) }}
         {% else %}
@@ -88,7 +96,7 @@
     <section class="notes-list" aria-labelledby="notes-heading">
       <div class="section-head">
         <h2 id="notes-heading">
-          {% if q %}Resultados{% elif folder %}{{ folder.split('/')[-1] }}{% else %}Sin carpeta{% endif %}
+          {% if q %}Resultados{% elif folder %}{{ folder.split('/')[-1] }}{% else %}Raíz{% endif %}
         </h2>
         <span class="count">{{ results|length if q else notes|length }}</span>
       </div>

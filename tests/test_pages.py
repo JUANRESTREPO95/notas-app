@@ -29,6 +29,14 @@ def test_login_flow_and_shell(client):
     assert "Buscar notas" in page.text
 
 
+def test_root_is_the_default_view(auth):
+    page = auth.get("/notes")
+    assert page.status_code == 200
+    assert "Raíz" in page.text
+    assert "Agente" in page.text
+    assert "Configuración" in page.text
+
+
 def test_note_page_renders_selected_note(auth):
     auth.post("/api/folders", json={"path": "Notas"})
     note = auth.post(

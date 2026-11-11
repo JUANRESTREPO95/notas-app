@@ -235,7 +235,8 @@ def notes_page(request: Request):
 
     folder_param = request.query_params.get("folder")
     if folder_param is None:
-        folder = folders[0] if folders else ""
+        # La raíz es la vista inicial: allí viven Agente, configuracion y proyectos.
+        folder = ""
     else:
         try:
             folder = normalize_rel(folder_param)

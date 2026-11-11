@@ -57,6 +57,8 @@ proyecto tal cual.
 - En Iris, `/proyecto <nombre>` crea y sincroniza la carpeta.
 - En Claude Code se usa la misma ruta.
 - `/guardar` resume lo importante y actualiza `contexto.md`.
+- En modo automático, cada intercambio se guarda en `conversacion.md`; en modo
+  manual solo se guarda con `/guardar`.
 {PROJECT_MARKER_END}"""
 
 MEMORY_CONTENT = f"""# Configuración

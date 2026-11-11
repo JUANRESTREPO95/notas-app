@@ -250,6 +250,9 @@ renombrar**.
   contexto, decisiones, pendientes y referencias.
 - Los proyectos sí se pueden borrar; `proyectos` permanece.
 - El agente puede crear más notas dentro de la carpeta del proyecto.
+- En Iris, `/guardar` resume lo importante en `contexto.md`. Con
+  `IRIS_MEMORY_MODE=auto` cada intercambio se añade a `conversacion.md`; con
+  `manual` solo se guarda al usar `/guardar`.
 - El token de Iris necesita escritura sobre `proyectos` y `configuracion.md`, y
   lectura sobre `Agente.md`.
 

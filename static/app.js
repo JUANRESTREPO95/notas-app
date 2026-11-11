@@ -475,6 +475,7 @@
   const deleteNoteForm = document.getElementById('delete-note-form');
 
   document.getElementById('delete-note-btn')?.addEventListener('click', () => {
+    if (NOTAS.protected) return;
     deleteNoteDialog?.showModal();
   });
 

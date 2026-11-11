@@ -941,6 +941,16 @@ button {
   overflow-wrap: anywhere;
 }
 
+.note-system {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
 .editor-panes {
   display: flex;
   flex: 1;

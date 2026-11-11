@@ -16,6 +16,8 @@ agentes o scripts lean y escriban sin compartir la contraseña.
 - Historial por nota con restauración de versiones.
 - Panel de ajustes para cambiar usuario y contraseña.
 - Tokens de API con nombre, permisos por carpeta y revocación.
+- Nota del sistema **«Agente»** en la raíz, protegida contra borrado y
+  publicada sin sesión en `/agente`.
 - Tema claro, oscuro o del sistema.
 - Manifiesto PWA e interfaz responsive.
 - Accesibilidad WCAG AA (probada con axe en claro/oscuro y varios tamaños).
@@ -192,6 +194,27 @@ python scripts/create_token.py --name mi-agente \
 | `POST` | `/api/tokens` | Crear token |
 | `PATCH` | `/api/tokens/{id}` | Editar permisos |
 | `DELETE` | `/api/tokens/{id}` | Revocar token |
+
+## Nota «Agente» y `/agente`
+
+Al arrancar, la app crea en la raíz una nota especial, `Agente.md`, con id fijo
+`agente` y `protected: true` en el frontmatter.
+
+- **No se puede borrar**: la API responde `403` y la interfaz oculta el botón.
+  Tampoco se puede eliminar de forma indirecta borrando su carpeta con
+  `recursive=true` (responde `409`).
+- **Sí se puede editar** como cualquier nota. El id no cambia y `/agente` la
+  encuentra aunque se mueva de carpeta.
+- Si el archivo desaparece del disco, se vuelve a crear en el siguiente
+  arranque.
+- **`GET /agente`** (y `/agente.md`) devuelve el contenido en Markdown **sin
+  pedir sesión**, con `Cache-Control: no-store`. Sirve para que un agente nuevo
+  lea las instrucciones y después pida el token de la API.
+- La nota es pública: no debe contener tokens, contraseñas ni secretos.
+
+```bash
+curl -fsSL https://tu-dominio/agente
+```
 
 ## Estructura del proyecto
 

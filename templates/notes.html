@@ -152,16 +152,18 @@
         <button class="icon-btn" id="history-note-btn" type="button" aria-label="Historial de la nota" title="Historial">
           {{ icon('clock', 18) }}
         </button>
+        {% if not selected_note_protected %}
         <button class="icon-btn danger" id="delete-note-btn" type="button" aria-label="Eliminar nota" title="Eliminar nota">
           {{ icon('trash', 18) }}
         </button>
+        {% endif %}
       </div>
     </header>
 
     <div class="editor">
       <input id="note-title" class="note-title-input" value="{{ selected_note.title }}"
              aria-label="Título de la nota" maxlength="200">
-      <p class="note-meta">{{ selected_note.rel_path }} · actualizada {{ selected_note.updated|fecha }}</p>
+      <p class="note-meta">{{ selected_note.rel_path }} · actualizada {{ selected_note.updated|fecha }}{% if selected_note_protected %}<span class="note-system">nota del sistema</span>{% endif %}</p>
       {{ format_bar('note-content', 'Formato de la nota') }}
       <div class="editor-panes">
         <textarea id="note-content" class="note-content" aria-label="Contenido de la nota"
@@ -268,6 +270,7 @@
   window.NOTAS = {
     page: 'notes',
     noteId: {{ (selected_note.id|tojson) if selected_note else 'null' }},
+    protected: {{ selected_note_protected|tojson }},
     folder: {{ folder|tojson }},
     focusSearch: {{ focus_search|tojson }},
     timezone: {{ timezone|tojson }}

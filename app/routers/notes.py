@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from ..agent_note import is_agent_note
 from ..history import get_version, list_versions, record_version
 from ..indexer import get_note, get_note_path, reindex, search_notes
 from ..schemas import NoteCreate, NoteMove, NoteUpdate
@@ -176,7 +177,12 @@ def restore_version(
 @router.delete("/notes/{note_id}")
 def remove(note_id: str, request: Request, principal: Principal = Depends(get_principal)) -> dict:
     settings = _settings(request)
-    rel, _ = _require_note(settings, note_id)
+    rel, note = _require_note(settings, note_id)
+    if is_agent_note(note):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "la nota Agente es del sistema y no se puede borrar",
+        )
     if not principal.can(rel, "write"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "sin permiso de escritura")
     delete_note(settings.notes_dir, rel)

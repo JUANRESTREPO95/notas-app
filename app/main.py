@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import pages
+from .agent_note import ensure_agent_note
 from .config import BASE_DIR, Settings
 from .db import connect, init_db
 from .history import backfill_versions
@@ -65,6 +66,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings.notes_dir.mkdir(parents=True, exist_ok=True)
         init_db(settings.db_path)
         seed_admin(settings)
+        if ensure_agent_note(settings):
+            logger.warning("Nota del sistema creada: %s", "Agente")
         await asyncio.to_thread(reindex, settings)
         await asyncio.to_thread(backfill_versions, settings)
         task = asyncio.create_task(_reindex_loop(settings))

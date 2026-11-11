@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .agent_note import is_agent_note
+
 
 def note_out(note: dict[str, Any], include_content: bool = False) -> dict[str, Any]:
     data = {
@@ -10,6 +12,7 @@ def note_out(note: dict[str, Any], include_content: bool = False) -> dict[str, A
         "title": note["title"],
         "created": note["created"],
         "updated": note["updated"],
+        "protected": is_agent_note(note),
     }
     if include_content:
         data["content"] = note["content"]

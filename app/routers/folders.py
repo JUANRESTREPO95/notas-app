@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from ..agent_note import is_agent_note
 from ..schemas import FolderCreate, FolderRename
 from ..security import Principal, get_principal
 from ..serializers import note_out
@@ -87,6 +88,18 @@ def remove(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     if not principal.can(clean, "write"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "sin permiso de escritura en esa ruta")
+    if recursive:
+        prefix = f"{clean}/"
+        protected = [
+            note
+            for note in scan_notes(settings.notes_dir, settings.timezone)
+            if note["rel_path"].startswith(prefix) and is_agent_note(note)
+        ]
+        if protected:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "la carpeta contiene la nota Agente, que no se puede borrar",
+            )
     try:
         delete_folder(settings.notes_dir, clean, recursive=recursive)
     except FileNotFoundError as exc:

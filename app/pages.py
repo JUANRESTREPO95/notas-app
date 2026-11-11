@@ -8,9 +8,10 @@ from zoneinfo import ZoneInfo
 import bleach
 import markdown as markdown_lib
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
+from .agent_note import AGENT_ROUTE, agent_note_content, is_agent_note
 from .config import BASE_DIR, Settings
 from .db import connect
 from .indexer import get_note, search_notes
@@ -204,6 +205,24 @@ def home():
     return RedirectResponse("/notes", status_code=303)
 
 
+@router.get(AGENT_ROUTE, include_in_schema=False)
+@router.get(f"{AGENT_ROUTE}.md", include_in_schema=False)
+def agent_page(request: Request):
+    """Instrucciones públicas para agentes nuevos (nota Agente)."""
+    content = agent_note_content(_settings(request))
+    if content is None:
+        return Response(
+            "La nota Agente no existe.",
+            status_code=404,
+            media_type="text/plain; charset=utf-8",
+        )
+    return Response(
+        content,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"},
+    )
+
+
 @router.get("/notes", response_class=HTMLResponse)
 def notes_page(request: Request):
     user = _current_user(request)
@@ -259,6 +278,7 @@ def notes_page(request: Request):
             "q": query,
             "selected_note": note,
             "selected_note_id": note["id"] if note else None,
+            "selected_note_protected": is_agent_note(note),
             "breadcrumbs": breadcrumbs(folder),
             "focus_search": request.query_params.get("focus") == "search",
             "timezone": settings.timezone,

@@ -221,22 +221,22 @@ Al arrancar, la app crea en la raíz una nota especial, `Agente.md`, con id fijo
 curl -fsSL https://tu-dominio/agente
 ```
 
-## Memoria de Iris
+## Memoria compartida (Iris y Claude Code)
 
-Al arrancar también se prepara la estructura de memoria de Iris, de forma
-idempotente:
+Al arrancar se prepara, de forma idempotente, una nota en la raíz:
 
 ```text
-Iris/
-  configuracion/
-    configuracion.md   cómo debe responder Iris: tono, reglas y límites
-    usuario.md         datos de la persona: nombre, edad, qué hace, preferencias
+configuracion.md
+  ## Configuración   cómo deben responder Iris y Claude Code: tono, reglas y límites
+  ## Usuario         nombre, edad, qué hace, preferencias y datos a recordar
 ```
 
-- Si faltan la carpeta o las notas, se crean con una plantilla.
-- Si ya existen, **no se tocan**: lo que edites se conserva.
-- La nota `Agente` recibe una sección que apunta a esas dos notas para que
-  cualquier agente sepa dónde leer la configuración y los datos del usuario.
+- Sirve igual para Iris y para un Claude Code que solo use Notas como memoria.
+- Si falta la nota, se crea con una plantilla. Si ya existe, **no se toca**.
+- Si existe la estructura anterior (`Iris/configuracion/configuracion.md` y
+  `usuario.md`), su contenido se migra a la nota nueva una sola vez.
+- La nota `Agente` apunta a `configuracion.md` para que cualquier agente sepa
+  dónde leer la configuración y los datos del usuario.
 
 ## Estructura del proyecto
 

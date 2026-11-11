@@ -375,8 +375,15 @@
     hideError(folderError);
     folderMode.value = mode;
     folderOriginal.value = path;
-    folderDialogTitle.textContent = mode === 'edit' ? 'Editar carpeta' : 'Nueva carpeta';
-    folderDelete.hidden = mode !== 'edit';
+    const isSystemFolder = mode === 'edit' && path === 'proyectos';
+    folderDialogTitle.textContent = isSystemFolder
+      ? 'Carpeta del sistema'
+      : mode === 'edit'
+        ? 'Editar carpeta'
+        : 'Nueva carpeta';
+    folderDelete.hidden = mode !== 'edit' || isSystemFolder;
+    folderName.disabled = isSystemFolder;
+    folderParent.disabled = isSystemFolder;
 
     if (mode === 'edit') {
       folderName.value = name;

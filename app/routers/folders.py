@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from ..agent_note import is_agent_note
+from ..indexer import reindex
+from ..memory_setup import PROJECTS_FOLDER, ensure_project_context
 from ..schemas import FolderCreate, FolderRename
 from ..security import Principal, get_principal
 from ..serializers import note_out
@@ -44,12 +46,15 @@ def create(payload: FolderCreate, request: Request, principal: Principal = Depen
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     if not principal.can(clean, "write"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "sin permiso de escritura en esa ruta")
+    settings = _settings(request)
     try:
-        created = create_folder(_settings(request).notes_dir, clean)
+        created = create_folder(settings.notes_dir, clean)
     except FileExistsError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    if ensure_project_context(settings.notes_dir, created, settings.timezone):
+        reindex(settings)
     return {"path": created}
 
 
@@ -61,6 +66,11 @@ def rename(payload: FolderRename, request: Request, principal: Principal = Depen
         new_clean = normalize_rel(payload.new_path)
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    if old_clean == PROJECTS_FOLDER:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "la carpeta proyectos es del sistema y no se puede renombrar",
+        )
     if not principal.can(old_clean, "write") or not principal.can(new_clean, "write"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "sin permiso de escritura en esa ruta")
     try:
@@ -86,6 +96,11 @@ def remove(
         clean = normalize_rel(path)
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    if clean == PROJECTS_FOLDER:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "la carpeta proyectos es del sistema y no se puede borrar",
+        )
     if not principal.can(clean, "write"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "sin permiso de escritura en esa ruta")
     if recursive:

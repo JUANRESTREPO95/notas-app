@@ -21,6 +21,8 @@ agentes o scripts lean y escriban sin compartir la contraseña.
 - Tokens de API con nombre, permisos por carpeta y revocación.
 - Nota del sistema **«Agente»** en la raíz, protegida contra borrado y
   publicada sin sesión en `/agente`.
+- Carpeta del sistema **`proyectos`** (no se puede borrar), con una subcarpeta
+  por proyecto y su `contexto.md`.
 - Tema claro, oscuro o del sistema.
 - Manifiesto PWA e interfaz responsive.
 - Accesibilidad WCAG AA (probada con axe en claro/oscuro y varios tamaños).
@@ -232,11 +234,24 @@ configuracion.md
 ```
 
 - Sirve igual para Iris y para un Claude Code que solo use Notas como memoria.
-- Si falta la nota, se crea con una plantilla. Si ya existe, **no se toca**.
+- Si falta la nota, se crea con una plantilla. Si ya existe, se conserva lo que
+  hayas escrito; solo se actualiza el bloque de **Proyectos** (entre marcas).
 - Si existe la estructura anterior (`Iris/configuracion/configuracion.md` y
   `usuario.md`), su contenido se migra a la nota nueva una sola vez.
 - La nota `Agente` apunta a `configuracion.md` para que cualquier agente sepa
   dónde leer la configuración y los datos del usuario.
+
+### Proyectos
+
+La carpeta `proyectos/` también se crea en la raíz y **no se puede borrar ni
+renombrar**.
+
+- Cada proyecto vive en `proyectos/<nombre>/` y recibe un `contexto.md` con
+  contexto, decisiones, pendientes y referencias.
+- Los proyectos sí se pueden borrar; `proyectos` permanece.
+- El agente puede crear más notas dentro de la carpeta del proyecto.
+- El token de Iris necesita escritura sobre `proyectos` y `configuracion.md`, y
+  lectura sobre `Agente.md`.
 
 ## Estructura del proyecto
 

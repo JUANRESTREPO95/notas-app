@@ -15,18 +15,22 @@ def test_memory_note_created_in_root(auth, settings):
     tree = auth.get("/api/tree").json()
     paths = {note["path"] for note in tree["notes"]}
     assert "configuracion.md" in paths
+    assert "proyectos" in tree["folders"]
 
     content = (settings.notes_dir / "configuracion.md").read_text(encoding="utf-8")
     assert "# Configuración" in content
     assert "## Configuración" in content
     assert "## Usuario" in content
+    assert "## Proyectos" in content
+    assert "proyectos/<nombre>" in content
     assert "Nombre:" in content
 
 
 def test_agent_note_points_to_shared_memory(client, settings):
     content = (settings.notes_dir / "Agente.md").read_text(encoding="utf-8")
-    assert "<!-- memoria:compartida:v3 -->" in content
+    assert "<!-- memoria:compartida:v4 -->" in content
     assert "configuracion.md" in content
+    assert "proyectos/<nombre>" in content
     assert "Claude Code" in content
     assert "Iris/configuracion" not in content
 
@@ -40,7 +44,7 @@ def test_memory_setup_is_idempotent(settings):
     assert ensure_memory_setup(settings) == []
 
     content = (settings.notes_dir / "Agente.md").read_text(encoding="utf-8")
-    assert content.count("<!-- memoria:compartida:v3 -->") == 1
+    assert content.count("<!-- memoria:compartida:v4 -->") == 1
 
 
 def test_memory_setup_migrates_old_notes(settings):
@@ -81,8 +85,62 @@ def test_memory_setup_updates_old_agent_section(settings):
     content = agent_path.read_text(encoding="utf-8")
     assert "Mi texto propio" in content
     assert "## Sección vieja" not in content
-    assert "<!-- memoria:compartida:v3 -->" in content
+    assert "<!-- memoria:compartida:v4 -->" in content
     assert "<!-- iris:configuracion:v2 -->" not in content
+
+
+def test_projects_folder_is_protected(auth):
+    tree = auth.get("/api/tree").json()
+    assert "proyectos" in tree["folders"]
+
+    assert (
+        auth.delete("/api/folders", params={"path": "proyectos"}).status_code == 403
+    )
+    assert (
+        auth.delete(
+            "/api/folders", params={"path": "proyectos", "recursive": "true"}
+        ).status_code
+        == 403
+    )
+    assert (
+        auth.patch(
+            "/api/folders", json={"path": "proyectos", "new_path": "otros"}
+        ).status_code
+        == 403
+    )
+
+
+def test_new_project_gets_context_note(auth, settings):
+    assert auth.post("/api/folders", json={"path": "proyectos/demo"}).status_code == 201
+    path = settings.notes_dir / "proyectos/demo/contexto.md"
+    assert path.is_file()
+    content = path.read_text(encoding="utf-8")
+    assert "# demo" in content
+    assert "## Contexto" in content
+
+    paths = {note["path"] for note in auth.get("/api/tree").json()["notes"]}
+    assert "proyectos/demo/contexto.md" in paths
+
+    response = auth.delete(
+        "/api/folders", params={"path": "proyectos/demo", "recursive": "true"}
+    )
+    assert response.status_code == 200
+    assert (settings.notes_dir / "proyectos").is_dir()
+
+
+def test_config_section_added_to_existing_note(settings):
+    prepare(settings)
+    path = settings.notes_dir / "configuracion.md"
+    path.write_text(
+        "---\nid: cfg\ntitle: Configuración\n---\n# Configuración\n\nMi texto\n",
+        encoding="utf-8",
+    )
+
+    ensure_memory_setup(settings)
+    content = path.read_text(encoding="utf-8")
+    assert "Mi texto" in content
+    assert "<!-- proyectos:inicio -->" in content
+    assert content.count("<!-- proyectos:inicio -->") == 1
 
 
 def test_memory_setup_does_not_overwrite_edits(settings):

@@ -148,7 +148,7 @@
       </a>
       <span class="save-status" id="save-status" role="status" aria-live="polite">Guardado</span>
       <div class="editor-actions">
-        <button class="btn-ghost" id="preview-toggle" type="button" aria-label="Vista previa">{{ icon('file', 16) }}<span id="preview-label">Vista previa</span></button>
+        <button class="btn-ghost" id="preview-toggle" type="button" aria-label="{% if selected_note.content|trim %}Escribir{% else %}Leer{% endif %}">{{ icon('file', 16) }}<span id="preview-label">{% if selected_note.content|trim %}Escribir{% else %}Leer{% endif %}</span></button>
         <button class="icon-btn" id="history-note-btn" type="button" aria-label="Historial de la nota" title="Historial">
           {{ icon('clock', 18) }}
         </button>
@@ -162,13 +162,15 @@
 
     <div class="editor">
       <input id="note-title" class="note-title-input" value="{{ selected_note.title }}"
-             aria-label="Título de la nota" maxlength="200">
+             aria-label="Título de la nota" maxlength="200"{% if selected_note.content|trim %} readonly{% endif %}>
       <p class="note-meta">{{ selected_note.rel_path }} · actualizada {{ selected_note.updated|fecha }}{% if selected_note_protected %}<span class="note-system">nota del sistema</span>{% endif %}</p>
-      {{ format_bar('note-content', 'Formato de la nota') }}
+      <div id="note-format"{% if selected_note.content|trim %} hidden{% endif %}>
+        {{ format_bar('note-content', 'Formato de la nota') }}
+      </div>
       <div class="editor-panes">
         <textarea id="note-content" class="note-content" aria-label="Contenido de la nota"
-                  spellcheck="true">{{ selected_note.content }}</textarea>
-        <div id="note-preview" class="preview prose" hidden></div>
+                  spellcheck="true"{% if selected_note.content|trim %} hidden{% endif %}>{{ selected_note.content }}</textarea>
+        <div id="note-preview" class="preview prose"{% if not selected_note.content|trim %} hidden{% endif %}>{{ selected_note_html|safe }}</div>
       </div>
     </div>
     {% else %}

@@ -511,7 +511,8 @@ button {
   text-decoration: line-through;
 }
 
-.editor > .format-bar {
+.editor > .format-bar,
+.editor > #note-format {
   margin-top: 10px;
 }
 
@@ -932,6 +933,10 @@ button {
   outline: 2px solid var(--ring);
   outline-offset: 4px;
   border-radius: 6px;
+}
+
+.note-title-input[readonly] {
+  cursor: default;
 }
 
 .note-meta {

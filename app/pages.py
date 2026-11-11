@@ -279,6 +279,7 @@ def notes_page(request: Request):
             "selected_note": note,
             "selected_note_id": note["id"] if note else None,
             "selected_note_protected": is_agent_note(note),
+            "selected_note_html": render_markdown(note["content"]) if note else "",
             "breadcrumbs": breadcrumbs(folder),
             "focus_search": request.query_params.get("focus") == "search",
             "timezone": settings.timezone,

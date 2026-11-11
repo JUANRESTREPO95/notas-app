@@ -8,7 +8,10 @@ agentes o scripts lean y escriban sin compartir la contraseña.
 ## Características
 
 - Carpetas y subcarpetas con árbol plegable.
-- Notas Markdown con frontmatter, autoguardado y vista previa.
+- Notas Markdown con frontmatter y autoguardado.
+- Las notas con contenido se abren en **modo lectura**; el botón **Escribir**
+  habilita la edición (título, formato y contenido). Las notas vacías se abren
+  directamente en escritura.
 - Barra de formato: títulos, negrita, cursiva, tachado, listas, checklist,
   tablas, citas, código, separadores y enlaces.
 - Búsqueda full-text con SQLite FTS5.

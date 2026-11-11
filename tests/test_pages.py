@@ -39,7 +39,7 @@ def test_note_page_renders_selected_note(auth):
     page = auth.get(f"/notes?note={note['id']}")
     assert page.status_code == 200
     assert "Mi nota" in page.text
-    assert "Vista previa" in page.text
+    assert "Escribir" in page.text
     assert "Notas/mi-nota.md" in page.text
     assert 'data-format="bold"' in page.text
     assert 'data-format="h1"' in page.text
@@ -47,6 +47,35 @@ def test_note_page_renders_selected_note(auth):
     assert 'data-format="checklist"' in page.text
     assert 'data-format="hr"' in page.text
     assert 'id="history-note-btn"' in page.text
+
+
+def test_note_with_content_opens_in_read_mode(auth):
+    auth.post("/api/folders", json={"path": "Notas"})
+    note = auth.post(
+        "/api/notes",
+        json={"folder": "Notas", "title": "Lectura", "content": "Hola **mundo**"},
+    ).json()
+
+    page = auth.get(f"/notes?note={note['id']}")
+    assert page.status_code == 200
+    assert 'id="note-format" hidden' in page.text
+    assert 'maxlength="200" readonly' in page.text
+    assert 'spellcheck="true" hidden' in page.text
+    assert "<strong>mundo</strong>" in page.text
+
+
+def test_empty_note_opens_in_write_mode(auth):
+    auth.post("/api/folders", json={"path": "Notas"})
+    note = auth.post(
+        "/api/notes",
+        json={"folder": "Notas", "title": "Vacía", "content": ""},
+    ).json()
+
+    page = auth.get(f"/notes?note={note['id']}")
+    assert page.status_code == 200
+    assert ">Leer<" in page.text
+    assert 'id="note-format">' in page.text
+    assert 'maxlength="200">' in page.text
     assert 'id="history-dialog"' in page.text
 
 

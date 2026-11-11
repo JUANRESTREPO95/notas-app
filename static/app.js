@@ -270,8 +270,10 @@
   const previewElement = document.getElementById('note-preview');
 
   if (previewButton && previewElement && contentInput) {
-    let visible = false;
-    let timer = null;
+    // El servidor ya deja la nota en lectura si tiene texto. Aquí solo se
+    // alterna entre leer y escribir.
+    let visible = contentInput.hidden;
+    const formatBar = document.getElementById('note-format');
 
     const renderPreview = async () => {
       const data = new FormData();
@@ -284,32 +286,29 @@
       }
     };
 
+    const setReading = (reading) => {
+      visible = reading;
+      contentInput.hidden = reading;
+      previewElement.hidden = !reading;
+      if (formatBar) formatBar.hidden = reading;
+      if (titleInput) titleInput.readOnly = reading;
+      if (previewLabel) previewLabel.textContent = reading ? 'Escribir' : 'Leer';
+      previewButton.setAttribute('aria-label', reading ? 'Escribir' : 'Leer');
+    };
+
     const showPreview = async () => {
-      visible = true;
-      contentInput.hidden = true;
-      previewElement.hidden = false;
-      if (previewLabel) previewLabel.textContent = 'Escribir';
-      previewButton.setAttribute('aria-label', 'Escribir');
+      setReading(true);
       await renderPreview();
     };
 
     const hidePreview = () => {
-      visible = false;
-      previewElement.hidden = true;
-      contentInput.hidden = false;
-      if (previewLabel) previewLabel.textContent = 'Vista previa';
-      previewButton.setAttribute('aria-label', 'Vista previa');
+      setReading(false);
+      contentInput.focus();
     };
 
     previewButton.addEventListener('click', () => {
       if (visible) hidePreview();
       else showPreview();
-    });
-
-    contentInput.addEventListener('input', () => {
-      if (!visible) return;
-      window.clearTimeout(timer);
-      timer = window.setTimeout(renderPreview, 400);
     });
   }
 

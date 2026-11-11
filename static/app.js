@@ -1074,10 +1074,12 @@
     const editNewFolder = document.getElementById('edit-new-folder');
     const rules = new Map();
     const editRules = new Map();
+    const targetLabels = new Map();
     let editingToken = null;
 
     function ruleLabel(path) {
-      return path || 'Todas las carpetas';
+      if (!path) return 'Todo (notas y carpetas)';
+      return targetLabels.get(path) || path;
     }
 
     function formatTokenDate(value) {
@@ -1188,16 +1190,41 @@
           if (!select) continue;
           while (select.options.length > 1) select.remove(1);
         }
-        for (const folder of data.folders) {
+        const appendGroup = (label, items, format) => {
+          if (!items.length) return;
           for (const select of [ruleFolder, editRuleFolder]) {
             if (!select) continue;
-            const option = document.createElement('option');
-            option.value = folder;
-            const depth = folder.split('/').length - 1;
-            option.textContent = '— '.repeat(depth) + folder.split('/').pop();
-            select.append(option);
+            const group = document.createElement('optgroup');
+            group.label = label;
+            for (const item of items) {
+              const option = document.createElement('option');
+              option.value = item.value;
+              option.textContent = format(item);
+              group.append(option);
+            }
+            select.append(group);
           }
+        };
+
+        targetLabels.clear();
+        for (const folder of data.folders) {
+          targetLabels.set(folder, folder);
         }
+        for (const note of data.notes || []) {
+          targetLabels.set(note.path, `Nota: ${note.title}`);
+        }
+
+        appendGroup(
+          'Carpetas',
+          data.folders.map((folder) => ({ value: folder, folder })),
+          ({ folder }) =>
+            '— '.repeat(folder.split('/').length - 1) + folder.split('/').pop()
+        );
+        appendGroup(
+          'Notas',
+          (data.notes || []).map((note) => ({ value: note.path, note })),
+          ({ note }) => `Nota: ${note.title}`
+        );
       } catch (error) {
         console.error(error);
       }

@@ -55,6 +55,39 @@ def test_agent_note_recreated_if_file_disappears(app, settings):
         assert client.get("/agente").status_code == 200
 
 
+def test_token_can_be_scoped_to_agent_note(client):
+    client.post("/api/login", json={"username": "juan", "password": "testpass123"})
+    created = client.post(
+        "/api/tokens",
+        json={
+            "name": "iris-agente",
+            "rules": [{"path": "Agente.md", "level": "write"}],
+        },
+    )
+    assert created.status_code == 201
+    token = created.json()["token"]
+    client.cookies.clear()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    tree = client.get("/api/tree", headers=headers).json()
+    assert [note["id"] for note in tree["notes"]] == ["agente"]
+    assert client.get("/api/notes/agente", headers=headers).status_code == 200
+    assert (
+        client.put(
+            "/api/notes/agente", headers=headers, json={"content": "por iris"}
+        ).status_code
+        == 200
+    )
+    assert client.get("/agente").text == "por iris"
+    assert client.delete("/api/notes/agente", headers=headers).status_code == 403
+    assert (
+        client.post(
+            "/api/notes", headers=headers, json={"folder": "", "title": "Otra"}
+        ).status_code
+        == 403
+    )
+
+
 def test_agent_note_page_hides_delete_button(auth):
     page = auth.get("/notes?note=agente")
     assert page.status_code == 200

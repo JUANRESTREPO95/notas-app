@@ -149,6 +149,8 @@ Bearer** con reglas por ruta:
 ```
 
 - La regla del prefijo más largo gana.
+- Una regla puede apuntar a una carpeta (`01-claude`) o a una nota concreta
+  (`Agente.md`). El panel de tokens ofrece las dos listas.
 - Una ruta sin regla queda denegada.
 - Los permisos de escritura incluyen lectura.
 - La sesión del administrador tiene acceso total.

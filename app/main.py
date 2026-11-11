@@ -15,6 +15,7 @@ from .config import BASE_DIR, Settings
 from .db import connect, init_db
 from .history import backfill_versions
 from .indexer import reindex
+from .iris_setup import ensure_iris_setup
 from .routers import auth, folders, notes, reminders, tokens
 from .security import hash_password
 from .storage import now_iso
@@ -68,6 +69,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         seed_admin(settings)
         if ensure_agent_note(settings):
             logger.warning("Nota del sistema creada: %s", "Agente")
+        created = ensure_iris_setup(settings)
+        if created:
+            logger.warning("Memoria de Iris preparada: %s", ", ".join(created))
         await asyncio.to_thread(reindex, settings)
         await asyncio.to_thread(backfill_versions, settings)
         task = asyncio.create_task(_reindex_loop(settings))

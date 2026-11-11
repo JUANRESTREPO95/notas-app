@@ -221,6 +221,23 @@ Al arrancar, la app crea en la raíz una nota especial, `Agente.md`, con id fijo
 curl -fsSL https://tu-dominio/agente
 ```
 
+## Memoria de Iris
+
+Al arrancar también se prepara la estructura de memoria de Iris, de forma
+idempotente:
+
+```text
+Iris/
+  configuracion/
+    configuracion.md   cómo debe responder Iris: tono, reglas y límites
+    usuario.md         datos de la persona: nombre, edad, qué hace, preferencias
+```
+
+- Si faltan la carpeta o las notas, se crean con una plantilla.
+- Si ya existen, **no se tocan**: lo que edites se conserva.
+- La nota `Agente` recibe una sección que apunta a esas dos notas para que
+  cualquier agente sepa dónde leer la configuración y los datos del usuario.
+
 ## Estructura del proyecto
 
 ```text
